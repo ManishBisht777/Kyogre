@@ -515,23 +515,6 @@ To improve Kyogre:
 5. Create a new commit with your improvements
 6. Push to origin
 
-## License
-
-[Your License Here]
-
-## Future Improvements
-
-- [ ] Support for multiple portfolio repositories
-- [ ] Multi-language blog generation
-- [ ] Customizable Claude prompts per project
-- [ ] Web UI for managing drafts
-- [ ] Email notifications for new PRs
-- [ ] Cross-platform scheduling (Linux with cron, Windows with Task Scheduler)
-- [ ] Support for GitLab and other Git providers
-- [ ] Analytics on blog-worthy vs filtered work
-- [ ] Draft editing and refinement before PR creation
-- [ ] Blog post categorization and tagging
-
 ## Support
 
 For issues, check:
