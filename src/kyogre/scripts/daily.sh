@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+export PATH="/opt/homebrew/bin:/usr/local/bin:/Users/manishbisht/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
 AGENT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 PORTFOLIO_REPO="/Users/manishbisht/Desktop/dev/manish/portfolio"
 BLOG_DIR="$PORTFOLIO_REPO/public/blogs"
