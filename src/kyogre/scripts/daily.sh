@@ -61,7 +61,19 @@ Create exactly one Markdown file inside:
 
 drafts/
 
-The article should contain:
+The article MUST start with YAML frontmatter:
+
+---
+title: [Generate a compelling title]
+description: [One-line summary of the technical insight]
+date: $(date +%Y-%m-%d)
+author: Manish Bisht
+tags: [kyogre, ai-generated, <generate 2-5 topic tags based on actual content>]
+source: autonomous
+reading_time: [estimate 1-2 minutes per 300 words]
+---
+
+Then the article should contain:
 
 1. Context
 2. Problem
@@ -70,6 +82,24 @@ The article should contain:
 5. Final solution
 6. Technical reasoning
 7. Lessons learned
+
+IMPORTANT TAGGING RULES:
+- ALWAYS include these fixed tags: 'kyogre', 'ai-generated'
+- THEN analyze the blog content and add 2-5 topic tags that match what the article is actually about
+- Available topic tags (use ONLY if the content matches):
+  * debugging (if article discusses troubleshooting/debugging)
+  * architecture (if discusses architectural decisions/design)
+  * performance (if discusses performance optimization/improvements)
+  * ai-llm (if AI/LLM/ML related work)
+  * lessons-learned (if article teaches lessons/insights)
+  * implementations (if shows code patterns/techniques)
+  * tradeoffs (if discusses design tradeoffs)
+  * refactoring (if discusses refactoring work)
+  * testing (if testing/test coverage related)
+  * security (if security/vulnerability related)
+- Use lowercase, hyphenated tags
+- Do NOT include tags that don't match the content
+- Select only the tags that are truly relevant to this specific blog post
 
 Use only information supported by the GitHub
 activity and repository.
