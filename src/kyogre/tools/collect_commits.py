@@ -32,7 +32,7 @@ def get_commits_by_user(username: str, token: str = None):
             "sort": "author-date",
             "order": "desc",
         }
-        resp = requests.get(url, headers=headers, params=params)
+        resp = requests.get(url, headers=headers, params=params, timeout=30)
 
         if resp.status_code != 200:
             print(f"Error {resp.status_code}: {resp.json().get('message', resp.text)}")

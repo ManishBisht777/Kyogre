@@ -19,6 +19,7 @@ def get_commit(repo_full_name, sha):
     response = requests.get(
         f"https://api.github.com/repos/{repo_full_name}/commits/{sha}",
         headers=HEADERS,
+        timeout=30,
     )
 
     response.raise_for_status()
