@@ -15,11 +15,14 @@ cd "$AGENT_DIR"
 
 echo "================================"
 echo " Personal Blog Agent (With Auto-Improvement)"
+echo " Run started: $(date '+%Y-%m-%d %H:%M:%S')"
 echo "================================"
 
 echo ""
 echo "1. Collecting commits..."
-uv run python tools/collect_commits.py
+# KYOGRE_DATE overrides the default (today) to backfill missed days,
+# e.g. KYOGRE_DATE=2026-08-21..2026-09-04
+uv run python tools/collect_commits.py ${KYOGRE_DATE:-}
 
 echo ""
 echo "2. Collecting diffs..."
@@ -27,6 +30,10 @@ uv run python tools/collect_diffs.py
 
 echo ""
 echo "3. Running Claude..."
+
+# Titles already live on the portfolio, so a backfill spanning several days
+# does not re-tell a story that has been published (by this agent or by hand).
+PUBLISHED_TITLES=$(grep -h "^title:" "$BLOG_DIR"/*.md 2>/dev/null | sed 's/^title: *//' || true)
 
 claude --permission-mode acceptEdits -p "
 You are my personal engineering blog agent.
@@ -36,7 +43,11 @@ Read:
 temp/commits.md
 temp/diffs.md
 
-Analyze today's GitHub activity.
+Analyze the GitHub activity in those files. It may span a single day or
+several days.
+
+ALREADY PUBLISHED - do not re-tell these stories:
+$PUBLISHED_TITLES
 
 Determine whether there is a genuinely valuable
 technical story.
@@ -59,9 +70,12 @@ Do not create a draft.
 
 If the work IS blog-worthy:
 
-Create exactly one Markdown file inside:
+Create one Markdown file inside drafts/ per distinct technical story.
 
-drafts/
+Usually that is exactly one file. If the activity covers several
+genuinely unrelated efforts, write one file per story, at most 3.
+Never split a single story across files, and never pad the count -
+one strong post beats three thin ones.
 
 The article MUST start with YAML frontmatter:
 
@@ -127,16 +141,7 @@ if [ "$DRAFT_COUNT" -eq 0 ]; then
     exit 0
 fi
 
-if [ "$DRAFT_COUNT" -gt 1 ]; then
-    echo "ERROR: More than one draft generated."
-    exit 1
-fi
-
-DRAFT=$(find drafts -maxdepth 1 -type f -name "*.md" | head -n 1)
-DRAFT_NAME=$(basename "$DRAFT")
-
-echo ""
-echo "5. Evaluating generated blog..."
+echo "Drafts to process: $DRAFT_COUNT"
 
 # Function to evaluate blog and extract score
 evaluate_blog() {
@@ -147,6 +152,17 @@ evaluate_blog() {
     echo "$eval_output" >&2
     echo "$score"
 }
+
+PUBLISHED_COUNT=0
+
+# Everything below runs once per draft. Body is left unindented so the
+# per-draft steps stay diffable against the single-draft version.
+for DRAFT in drafts/*.md; do
+
+DRAFT_NAME=$(basename "$DRAFT")
+
+echo ""
+echo "5. Evaluating $DRAFT_NAME..."
 
 # Get initial score
 SCORE=$(evaluate_blog "$DRAFT")
@@ -265,6 +281,10 @@ cp "$AGENT_DIR/$DRAFT" "$BLOG_DIR/$DRAFT_NAME"
 echo ""
 echo "11. Creating branch..."
 
+# Branch from master, not from the branch a previous draft left us on,
+# or the second PR would also contain the first blog.
+git checkout master
+
 BRANCH_NAME="blog/${DRAFT_NAME%.md}"
 git checkout -b "$BRANCH_NAME"
 
@@ -297,7 +317,7 @@ gh pr create \
     --base master \
     --head "$BRANCH_NAME" \
     --title "docs: add ${DRAFT_NAME%.md}" \
-    --body "Auto-generated blog post from today's commits.
+    --body "Auto-generated blog post from commits (${KYOGRE_DATE:-today}).
 
 Quality Score: $SCORE/10
 Status: $([ $(echo "$SCORE >= 7.0" | bc -l) -eq 1 ] && echo 'Passed' || echo 'Manual Review')"
@@ -307,12 +327,10 @@ echo "16. Cleanup..."
 
 cd "$AGENT_DIR"
 rm "$DRAFT"
-rm -f temp/commits.md
-rm -f temp/diffs.md
 
 echo ""
 echo "================================"
-echo " SUCCESS"
+echo " PUBLISHED"
 echo "================================"
 echo "Blog: $DRAFT_NAME"
 echo "Score: $SCORE/10"
@@ -320,4 +338,20 @@ if [ "$ITERATION" -gt 0 ]; then
     echo "Iterations: $ITERATION (auto-improved)"
 fi
 echo "Branch: $BRANCH_NAME"
+echo "================================"
+
+PUBLISHED_COUNT=$((PUBLISHED_COUNT + 1))
+
+done
+# end per-draft loop
+
+# Leave the portfolio on master so the next run starts from a known branch.
+git -C "$PORTFOLIO_REPO" checkout master
+
+rm -f temp/commits.md
+rm -f temp/diffs.md
+
+echo ""
+echo "================================"
+echo " SUCCESS - $PUBLISHED_COUNT blog(s) published"
 echo "================================"

@@ -12,16 +12,20 @@ GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
 GITHUB_USERNAME = os.environ["GITHUB_USERNAME"]
 
 
-def get_commits_by_user(username: str, token: str = None):
-    """Search commits authored by `username` across all repos, committed today (UTC)."""
-    today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+def get_commits_by_user(username: str, token: str = None, when: str = None):
+    """Search commits authored by `username` across all repos.
+
+    `when` is any GitHub date qualifier ("2026-08-21", "2026-08-21..2026-09-04"),
+    defaulting to today (UTC). Used to backfill days the nightly run missed.
+    """
+    when = when or datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
     url = "https://api.github.com/search/commits"
     headers = {"Accept": "application/vnd.github.cloak-preview+json"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
 
-    query = f"author:{username} author-date:{today_str}"
+    query = f"author:{username} author-date:{when}"
     commits = []
     page = 1
     while True:
@@ -50,7 +54,8 @@ def get_commits_by_user(username: str, token: str = None):
 
 
 def main():
-    commits_data = get_commits_by_user(GITHUB_USERNAME, GITHUB_TOKEN)
+    when = sys.argv[1] if len(sys.argv) > 1 else None
+    commits_data = get_commits_by_user(GITHUB_USERNAME, GITHUB_TOKEN, when)
 
     commits = []
     for commit in commits_data:
