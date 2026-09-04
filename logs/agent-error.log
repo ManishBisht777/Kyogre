@@ -1,2 +1,0 @@
-shell-init: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
-/bin/bash: /Users/manishbisht/Desktop/langchain/kyogre/src/kyogre/scripts/daily.sh: Operation not permitted

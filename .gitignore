@@ -9,3 +9,9 @@ wheels/
 # Virtual environments
 .venv
 .env
+
+# Runtime scratch
+logs/
+temp/
+drafts/
+evaluations/
